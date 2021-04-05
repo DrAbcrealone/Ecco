@@ -1,94 +1,140 @@
-class CEccoScriptItem{
+//TODO: Brand new yankee scripts
+funcdef string FuncEccoCommand(CEccoScriptCommandItem@);
+
+class CEccoScriptCommandItem{
+    FuncEccoCommand@ pFunc();
+    array<sting> = aryArgs = {};
+}
+
+class CEccoScriptItem {
     private string szName;
     private string szPath;
-    private array<array<string>@> aryExcuteBlock = {};
-    private dictionary dicInfo = {};
-    void Set(string szKey, string szVal){
-        dicInfo.set(szKey, szVal);
-    }
-    string Get(string szKey){
-        return string(dicInfo[szKey]);
-    }
-    string opIndex(string szKey){
-        return Get(szKey);
-    }
-    bool exists(string szKey){
-        return dicInfo.exists(szKey);
+    private array<CEccoScriptCommandItem@> aryExcuteBlock = {};
+}
+
+enum SCRIPTS_VAR_TYPE{
+    VAR_INVALID = -1,
+    VAR_STRING = 0,
+    VAR_FUNCTION = 1;
+}
+
+class CEccoScriptVar{
+    string szName;
+    private array<string> aryVal = {};
+    SCRIPTS_VAR_TYPE iType = SCRIPTS_VAR_TYPE::VAR_INVALID;
+    void Set(string val){
+        aryVal.removeAll();
+        aryVal[0] = val;
+        iType = SCRIPTS_VAR_TYPE::VAR_STRING;
     }
 
-    bool opEquals(string _szPath){
-        return szPath == _szPath;
+    void Set(array<string>@ aryInput){
+        aryVal = aryInput;
+        iType = SCRIPTS_VAR_TYPE::VAR_FUNCTION;
+    }
+}
+
+
+class CEccoException{
+    string Message;
+    uint Line;
+    uint Pos;
+    CEccoException(string _Msg, uint _L, uint _P){
+        Message = _Msg;
+        Line = _L;
+        Pos = _P;
+    }
+}
+
+class CEccoScriptEngine{
+    //紧急拉闸
+     private bool bException = false;
+     private CEccoException@ pException = null;
+     //解释到第几行
+     private uint iLine = 0;
+     private uint iPosition = 0;
+     //延迟控制
+     private CScheduledFunction@ pScheduler = null;
+     private float flNowDelay = 0.0f;
+     //变量
+     private dictionary dicVars = {};
+     private void SetVar(string szName, string szVar){
+         CEccoScriptVar pVar;
+         pVar.Set(szVar);
+         dicVars.set(szName, @pVar);
+     }
+     private void SetVar(string szName, array<string> aryVar){
+         CEccoScriptVar pVar;
+         pVar.Set(aryVar);
+         dicVars.set(szName, @pVar);
+     }
+
+     //栈
+     private array<string> aryStack = {};
+     //是否处于压栈状态
+     private bool bIsInStack = false;
+
+    //从文件分割得代码块
+    array<string>@ Load(string szPath){
+
+    }
+    //从字符串分割得代码块
+    array<string>@ Parse(string szCode){
+
     }
 
-    bool IsEmpty(){
-        return aryExcuteBlock.length() <= 0;
+    void Interpret(array<string>@ aryLines){
+        //紧急拉闸报错
+        if(bException && State != TCLEngineState::IN_TRYCATCH){
+            Logger::Log("Catch Excetipon in TCL script (%1,%2):\n    Message:%3.\n   script will abort running.", pException.iLine, pException.iPos, pException.Message);
+            return;
+        }
+        //解释好多行
+        //递归解释，可以控制整个流延迟
+        if(aryLines.length() > 0){
+            iLine++;
+            InterpretLine(aryLines[0]);
+            aryLines.removeAt(0);
+            pScheduler.SetTimeout(this, "Interpret", flNowDelay, @aryLines);
+        }
     }
 
-    string Name{
-        get {return szName;}
-    }
-
-    CEccoScriptItem(string _Path){
-        this.szPath = szRootPath + "scripts/" + _Path + ".echo";
-        this.szName = _Path;
-        array<string> aryRandom = {};
-        bool bIsReadingRandom = false;
-        File @pFile = g_FileSystem.OpenFile(this.szPath, OpenFile::READ);
-        if (pFile !is null && pFile.IsOpen()){
-            string szLine;
-            while (!pFile.EOFReached()){
-                pFile.ReadLine(szLine);
-                szLine.Trim();
-                if(!szLine.IsEmpty()){
-                    if(szLine.Find(":") != String::INVALID_INDEX){
-                        uint iFirstSymbol = szLine.FindFirstOf(":", 0);
-                        if(iFirstSymbol > 0 && iFirstSymbol < szLine.Length()){
-                            string szInfoName = szLine.SubString(0, iFirstSymbol);
-                            szInfoName.Trim();
-                            string szInfoContent = szLine.SubString(iFirstSymbol + 1);
-                            szInfoContent.Trim();
-                            this.Set(szInfoName, szInfoContent);
-                        }
-                        continue;
-                    }
-                    if(szLine.StartsWith("{")){
-                        bIsReadingRandom = true;
-                        string szDetection = szLine.Replace("{", "");
-                        szDetection.Trim();
-                        if(!szDetection.IsEmpty())
-                            aryRandom.insertLast(szDetection);
-                        continue;
-                    }
-                    if(szLine.EndsWith("}")){
-                        bIsReadingRandom = false;
-                        string szDetection = szLine.Replace("}", "");
-                        szDetection.Trim();
-                        if(!szDetection.IsEmpty())
-                            aryRandom.insertLast(szDetection);
-                        aryExcuteBlock.insertLast(Utility::Select(aryRandom, function(string szLine){return !szLine.IsEmpty();}));
-                        aryRandom = {};
-                        continue;
-                    }
-                    if(bIsReadingRandom)
-                        aryRandom.insertLast(szLine);
-                    else
-                        aryExcuteBlock.insertLast(array<string> = {szLine});
-                }
+    string InterpretLine(string szLine){
+        if(bIsInStack){
+            if(szLine.FindFirstOf("}") != String::INVALID_INDEX)
+                bIsInStack = false;
+            else{
+                aryStack.insertLast(szLine);
+                return "";
             }
-            pFile.Close();
         }
+        //解释一行
+        //预处理小括号，递归进行解释
+        string szCommand = szLine;
+        uint lParenth = szCommand.FindFirstOf("[");
+        uint rParenth = szCommand.FindLastOf("]");
+        if(lParenth != String::INVALID_INDEX || rParenth != String::INVALID_INDEX){
+            if(lParenth != String::INVALID_INDEX && rParenth != String::INVALID_INDEX){
+                string szSubCommand = szCommand.SubString(lParenth + 1, rParenth - lParenth);
+                szCommand = szCommand.Replace("[" + szSubCommand + "]", InterpretLine(szSubCommand));
+            }
+            else
+                ThrowException("Missing closed parenthesis");
+        }
+        //我是返回值
+        string szReturn = "";
+        szCommand.Trim();
+        szCommand = szCommand.Replace("\t", " ");
+        array<string> arySplites = szCommand.Split(" ");
+        for(uint i = 0; i < arySplites.length(); i++){
+            arySplites.Trim();
+            //压栈
+            if(arySplites[i] == "{")
+                bIsInStack = true;
+        }
+        return szReturn;
     }
 
-    bool Excute(CBasePlayer@ pPlayer){
-    	bool bFlag = true;
-        for(uint i = 0; i < aryExcuteBlock.length(); i++){
-            if(aryExcuteBlock[i].length() > 1)
-                e_ScriptParser.RandomExecute(aryExcuteBlock[i], @pPlayer);
-            else if(aryExcuteBlock[i].length() == 1)
-                bFlag = bFlag && e_ScriptParser.ExecuteCommand(aryExcuteBlock[i][0], @pPlayer);
-        }
-        return bFlag;
-    }
 }
 
 class CEccoScriptParser{
