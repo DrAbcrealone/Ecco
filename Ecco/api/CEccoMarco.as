@@ -1,7 +1,7 @@
-funcdef bool CustomMacroFunc(CBasePlayer@, array<string>@);
+funcdef string CustomMacroFunc(CBasePlayer@, array<string>@);
 interface IEccoMarco{
     string Command();
-    bool Execute(CBasePlayer@ pPlayer, array<string>@ args);
+    string Execute(CBasePlayer@ pPlayer, array<string>@ args);
     bool opEquals(string szName);
 }
 
@@ -18,7 +18,7 @@ class CEccoMarco : IEccoMarco{
         return _Command;
     }
 
-    bool Execute(CBasePlayer@ pPlayer, array<string>@ args){
+    string Execute(CBasePlayer@ pPlayer, array<string>@ args){
         return _Marco(@pPlayer, @args);
     }
 

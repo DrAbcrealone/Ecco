@@ -70,7 +70,7 @@ namespace EccoBase{
     Logger::Log("[ERROR - Ecco::Echo::EchoBase] " + string(ArgsAmount) + " argument(s) are not allowed for " + MacroName);
   }
 
-  bool Macro_include(CBasePlayer@ pPlayer, array<string>@ args){
+  string Macro_include(CBasePlayer@ pPlayer, array<string>@ args){
     bool Success = true;
     switch(args.length()){
       case 1:
@@ -83,10 +83,10 @@ namespace EccoBase{
         ErrorInfo("include", args.length());
         Success =  false;
     }
-    return Success;
+    return string(Success);
   }
   
-  bool Macro_money(CBasePlayer@ pPlayer, array<string>@ args){
+  string Macro_money(CBasePlayer@ pPlayer, array<string>@ args){
     bool Success = true;
     switch(args.length()){
       case 1:
@@ -99,10 +99,10 @@ namespace EccoBase{
         ErrorInfo("money", args.length());
         Success = false;
     }
-    return Success;
+    return string(Success);
   }
 
-  bool Macro_addinv(CBasePlayer@ pPlayer, array<string>@ args){
+  string Macro_addinv(CBasePlayer@ pPlayer, array<string>@ args){
     bool Success = true;
     switch(args.length()){
       case 1:
@@ -117,10 +117,10 @@ namespace EccoBase{
     }
     if(!Success)
       Logger::Chat(pPlayer,EccoConfig::GetLocateMessage("LocaleAlreadyHave", @pPlayer));
-    return Success;
+    return string(Success);
   }
 
-  bool Macro_delinv(CBasePlayer@ pPlayer, array<string>@ args){
+  string Macro_delinv(CBasePlayer@ pPlayer, array<string>@ args){
     bool Success = true;
     switch(args.length()){
       case 1:
@@ -133,10 +133,10 @@ namespace EccoBase{
         ErrorInfo("delinv", args.length());
         Success = false;
     }
-    return Success;
+    return string(Success);
   }
 
-  bool Macro_maxhealth(CBasePlayer@ pPlayer, array<string>@ args){
+  string Macro_maxhealth(CBasePlayer@ pPlayer, array<string>@ args){
     CBasePlayer@ Check = null;
     switch(args.length()){
       case 1:
@@ -148,12 +148,12 @@ namespace EccoBase{
         break;
       default:
         ErrorInfo("maxhealth", args.length());
-        return false;
+        return "0";
     }
-    return true;
+    return "1";
   }
 
-  bool Macro_maxarmor(CBasePlayer@ pPlayer, array<string>@ args){
+  string Macro_maxarmor(CBasePlayer@ pPlayer, array<string>@ args){
     CBasePlayer@ Check = null;
     switch(args.length()){
       case 1:
@@ -165,30 +165,30 @@ namespace EccoBase{
         break;
       default:
         ErrorInfo("maxarmor", args.length());
-        return false;
+        return "0";
     }
-    return true;
+    return "1";
   }
  
-  bool Macro_say(CBasePlayer@ pPlayer, array<string>@ args){
+  string Macro_say(CBasePlayer@ pPlayer, array<string>@ args){
     string Content = "";
     for(int i=0; i<int(args.length()); i++){
       Content += args[i] + " ";
     }
     g_PlayerFuncs.ClientPrint(pPlayer, HUD_PRINTTALK, Content+"\n");
-    return true;
+    return "0";
   }
   
-  bool Macro_broadcast(CBasePlayer@ pPlayer, array<string>@ args){
+  string Macro_broadcast(CBasePlayer@ pPlayer, array<string>@ args){
     string Content = "";
     for(int i=0; i<int(args.length()); i++){
       Content += args[i] + " ";
     }
     g_PlayerFuncs.ClientPrintAll(HUD_PRINTTALK, Content+"\n");
-    return true;
+    return "1";
   }
   
-  bool Macro_give(CBasePlayer@ pPlayer, array<string>@ args){
+  string Macro_give(CBasePlayer@ pPlayer, array<string>@ args){
     CBasePlayer@ targetPlayer = null;
     switch(args.length()){
       case 1:
@@ -208,21 +208,21 @@ namespace EccoBase{
         break;
       default:
         ErrorInfo("give", args.length());
-        return false;
+        return "0";
     }
-    return true;
+    return "1";
   }
 
-  bool Macro_log(CBasePlayer@ pPlayer, array<string>@ args){
+  string Macro_log(CBasePlayer@ pPlayer, array<string>@ args){
     string Content = "";
     for(int i=0; i<int(args.length()); i++){
       Content += args[i] + " ";
     }
     g_Log.PrintF("[MACRO - Ecco::Echo] "+Content+"\n");
-    return true;
+    return "1";
   }
 
-  bool Macro_hurt(CBasePlayer@ pPlayer, array<string>@ args){
+  string Macro_hurt(CBasePlayer@ pPlayer, array<string>@ args){
     CBasePlayer@ Check = null;
     switch(args.length()){
       case 0:
@@ -250,12 +250,12 @@ namespace EccoBase{
         break;
       default:
         ErrorInfo("hurt", args.length());
-        return false;
+        return "0";
     }
-    return true;
+    return "1";
   }
 
-  bool Macro_heal(CBasePlayer@ pPlayer, array<string>@ args){
+  string Macro_heal(CBasePlayer@ pPlayer, array<string>@ args){
     CBasePlayer@ Check = null;
     switch(args.length()){
       case 0:
@@ -275,12 +275,12 @@ namespace EccoBase{
         break;
       default:
         ErrorInfo("heal", args.length());
-        return false;
+        return "0";
     }
-    return true;
+    return "1";
   }
   
-  bool Macro_armor(CBasePlayer@ pPlayer, array<string>@ args){
+  string Macro_armor(CBasePlayer@ pPlayer, array<string>@ args){
     CBasePlayer@ Check = null;
     switch(args.length()){
       case 0:
@@ -300,12 +300,12 @@ namespace EccoBase{
         break;
       default:
         ErrorInfo("armor", args.length());
-        return false;
+        return "0";
     }
-    return true;
+    return "1";
   }
   
-  bool Macro_maxspeed(CBasePlayer@ pPlayer, array<string>@ args){
+  string Macro_maxspeed(CBasePlayer@ pPlayer, array<string>@ args){
     CBasePlayer@ targetPlayer = null;
     switch(args.length()){
       case 1:
@@ -317,12 +317,12 @@ namespace EccoBase{
         break;
       default:
         ErrorInfo("maxspeed", args.length());
-        return false;
+        return "0";
     }
-    return true;
+    return "1";
   }
   
-  bool Macro_gravity(CBasePlayer@ pPlayer, array<string>@ args){
+  string Macro_gravity(CBasePlayer@ pPlayer, array<string>@ args){
     CBasePlayer@ targetPlayer = null;
     switch(args.length()){
       case 1:
@@ -334,9 +334,9 @@ namespace EccoBase{
         break;
       default:
         ErrorInfo("gravity", args.length());
-        return false;
+        return "0";
     }
-    return true;
+    return "1";
   }
 }
 }
