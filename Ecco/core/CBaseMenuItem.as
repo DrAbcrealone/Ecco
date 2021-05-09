@@ -40,7 +40,7 @@ class CBaseMenuItem{
                 }
             }else
                 Logger::Chat(pPlayer, 
-                    EccoConfig::GetConfig()["Ecco.BaseConfig", "BuyMenuName"].getString() + 
+                    EccoConfig::GetLocateMessage("ChatLogTitle", @pPlayer) + 
                     EccoConfig::GetLocateMessage("CannotAffordPrice", @pPlayer));
             return false;
         }
@@ -96,7 +96,13 @@ class CBaseMenuItem{
     }
 
     CBaseMenuItem@ GetItem(CTextMenu@ _pTextMenu, string _DisplayName){
-        if(_DisplayName == this.DisplayName && @this.pParent.pTextMenu is @_pTextMenu)
+        if(@this.pParent !is null && @this.pParent.pTextMenu is @_pTextMenu && (
+                (_DisplayName == this.DisplayName && 
+                    !EccoConfig::GetConfig()["Ecco.BuyMenu", "UseBlurMatchForArgs"].getBool()) || 
+                (this.DisplayName.Find(_DisplayName) != String::INVALID_INDEX && 
+                    EccoConfig::GetConfig()["Ecco.BuyMenu", "UseBlurMatchForArgs"].getBool())
+            )
+        )
             return @this;
         else{
             CBaseMenuItem@ pItem = null;
