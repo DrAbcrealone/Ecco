@@ -52,7 +52,12 @@ class EccoPlayerInventory{
     }
 
     void SetBalance(CBasePlayer@ pPlayer, int Amount){
-        WriteInData(pPlayer, Amount);
+        bool bFlag = true;
+        EccoHook::PreChangeBalance(pPlayer, Amount, bFlag);
+        if(bFlag){
+            WriteInData(pPlayer, Amount);
+            EccoHook::PostChangeBalance(pPlayer, Amount);
+        }
     }
     int ChangeBalance(CBasePlayer@ pPlayer, int Amount){
         int iBalance = GetBalance(pPlayer) + Amount;
@@ -118,6 +123,17 @@ class EccoPlayerInventory{
         string szPlayerId = g_EngineFuncs.GetPlayerAuthId(pPlayer.edict());
         if(szPlayerId == "STEAM_ID_LAN")
             szPlayerId = pPlayer.pev.netname;
+        else{
+            szPlayerId.Replace("STEAM_", "");
+            szPlayerId.Replace(":", "");
+        }
+        return szPlayerId;
+    }
+
+    string GetUniquePlayerId(edict_t@ pPlayer){
+        string szPlayerId = g_EngineFuncs.GetPlayerAuthId(pPlayer);
+        if(szPlayerId == "STEAM_ID_LAN")
+            szPlayerId = pPlayer.vars.netname;
         else{
             szPlayerId.Replace("STEAM_", "");
             szPlayerId.Replace(":", "");

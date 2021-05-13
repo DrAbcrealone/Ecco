@@ -49,9 +49,10 @@ namespace EccoPlayerStorage{
         EHandle pPlayer;
         float flScore;
         float flObtained;
-
         string szLastPlayMap;
         DateTime pLastUpdateTime;
+
+        dictionary dicCustomValue = {};
     }
     CScheduledFunction@ RefreshScore;
     CPlayerStorageData pData;
@@ -61,6 +62,12 @@ namespace EccoPlayerStorage{
             pData.SetScore(pPlayer, 0.0f);
         else
             pData.Add(pPlayer);
+    }
+
+    dictionary@ GetCustomStorage(CBasePlayer@ pPlayer){
+        if(Exists(@pPlayer))
+            return pData[@pPlayer].dicCustomValue;
+        return null;
     }
 
     void ResetPlayerBuffer(){
@@ -83,19 +90,29 @@ namespace EccoPlayerStorage{
     void RefreshBuffer(){
         float flConfigMultiplier = EccoConfig::GetConfig()["Ecco.BaseConfig", "ScoreToMoneyMultiplier"].getFloat();
         int iMaxLimitation = EccoConfig::GetConfig()["Ecco.BaseConfig", "ObtainMoneyPerMapMax"].getInt();
-        for(int i = 0; i < g_Engine.maxClients; i++){
-            CBasePlayer@ pPlayer = g_PlayerFuncs.FindPlayerByIndex(i+1);
+        for(int i = 0; i <= g_Engine.maxClients; i++){
+            CBasePlayer@ pPlayer = g_PlayerFuncs.FindPlayerByIndex(i);
             if(pPlayer !is null){
-                string szPlayerUniqueId = e_PlayerInventory.GetUniquePlayerId(pPlayer);
-                int iScoreChanged = int((pPlayer.pev.frags - pData[szPlayerUniqueId].flScore) * flConfigMultiplier);
-                if(iScoreChanged != 0 && iMaxLimitation > 0 && pData[szPlayerUniqueId].flObtained < iMaxLimitation){
-                    if(pData[szPlayerUniqueId].flObtained + iScoreChanged <= iMaxLimitation){
-                        e_PlayerInventory.ChangeBalance(pPlayer, iScoreChanged);
-                        pData[szPlayerUniqueId].flObtained += iScoreChanged;
+                string szPlayerUniqueId = e_PlayerInventory.GetUniquePlayerId(@pPlayer);
+                if(!Exists(@pPlayer))
+                    pData.Add(@pPlayer);
+                
+                CPlayerStorageDataItem@ pPlayerData = pData[szPlayerUniqueId];
+                int iScoreChanged = int((int(pPlayer.pev.frags) - int(pPlayerData.flScore)) * flConfigMultiplier);
+                if(iScoreChanged != 0 ){
+                    if(iMaxLimitation > 0){
+                        if(pPlayerData.flObtained + iScoreChanged < iMaxLimitation){
+                            e_PlayerInventory.ChangeBalance(pPlayer, iScoreChanged);
+                            pPlayerData.flObtained += iScoreChanged;
+                        }
+                        else if(pPlayerData.flObtained < iMaxLimitation){
+                            e_PlayerInventory.ChangeBalance(pPlayer, int(iMaxLimitation - pPlayerData.flObtained));
+                            pPlayerData.flObtained = iMaxLimitation;
+                        }
                     }
                     else{
-                        e_PlayerInventory.ChangeBalance(pPlayer, int(iMaxLimitation - pData[szPlayerUniqueId].flObtained));
-                        pData[szPlayerUniqueId].flObtained = iMaxLimitation;
+                        e_PlayerInventory.ChangeBalance(pPlayer, iScoreChanged);
+                        pPlayerData.flObtained += iScoreChanged;
                     }
                 }
                 pData.SetScore(pPlayer, pPlayer.pev.frags);

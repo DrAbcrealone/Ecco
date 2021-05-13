@@ -10,7 +10,9 @@ namespace Logger
     
     void Log(string szContent)
     {
-        g_Log.PrintF( "[" + g_Module.GetModuleName() + "] " + szContent + "\n");
+        string szTime = "";
+        DateTime().Format(szTime, "%Y-%m-%d %H:%M:%S");
+        g_Log.PrintF( "[" + g_Module.GetModuleName() + "] [" + szTime + "] " + szContent + "\n");
     }
     
     void WriteLine(string szContent)
@@ -30,6 +32,11 @@ namespace Logger
     void Chat(CBasePlayer@ pPlayer, string szContent)
     {
         g_PlayerFuncs.ClientPrint(pPlayer, HUD_PRINTTALK, szContent + "\n");
+    }
+
+    void Chat(string szContent)
+    {
+        g_PlayerFuncs.ClientPrintAll(HUD_PRINTTALK, szContent + "\n");
     }
 
     void Chat(CBasePlayer@ pPlayer)
@@ -58,5 +65,14 @@ namespace Logger
     void Console(string szContent)
     {
         g_PlayerFuncs.ClientPrintAll( HUD_PRINTCONSOLE, szContent + "\n");
+    }
+
+    void Center(CBasePlayer@ pPlayer, string szContent)
+    {
+        g_PlayerFuncs.ClientPrint(pPlayer, HUD_PRINTTALK, szContent + "\n");
+    }
+    void Center(string szContent)
+    {
+        g_PlayerFuncs.ClientPrintAll(HUD_PRINTTALK, szContent + "\n");
     }
 }

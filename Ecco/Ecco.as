@@ -5,6 +5,7 @@
 #include "core/BuyMenu"
 #include "core/SmartPrecache"
 #include "core/CBaseMenuItem"
+#include "core/EccoHook"
 
 string szRootPath = "scripts/plugins/Eccogit/Ecco/";
 string szStorePath = "scripts/plugins/store/Ecco/";
@@ -38,12 +39,36 @@ void PluginInit(){
 
     e_ScriptParser.BuildItemList();
 
-    EccoInclude::AddonListBuilder();
-    string szContactInfo = "https://github.com/DrAbcrealone/Ecco\nVersion:" + IO::FileTotalReader(szRootPath + "Version");
-    g_Module.ScriptInfo.SetContactInfo(EccoInclude::AddAddonInfo(szContactInfo));
+    g_Hooks.RegisterHook(Hooks::Player::ClientSay, @onChat);
+    g_Hooks.RegisterHook(Hooks::Player::ClientPutInServer, @onJoin);
 
+    EccoInclude::AddonListBuilder();
     EccoInclude::PluginInit();
 
+    string szBanner = """
+
+     /$$$$$$$$  /$$$$$$   /$$$$$$   /$$$$$$ 
+    | $$_____/ /$$__  $$ /$$__  $$ /$$__  $$
+    | $$      | $$  \__/| $$  \__/| $$  \ $$
+    | $$$$$   | $$      | $$      | $$  | $$
+    | $$__/   | $$      | $$      | $$  | $$
+    | $$      | $$    $$| $$    $$| $$  | $$
+    | $$$$$$$$|  $$$$$$/|  $$$$$$/|  $$$$$$/
+    |________/ \______/  \______/  \______/ 
+
+    """;
+    string szVersion = IO::FileTotalReader(szRootPath + "Version");
+    string szContactInfo = szBanner + "\nhttps://github.com/DrAbcrealone/Ecco\nVersion:" + szVersion;
+    g_Module.ScriptInfo.SetContactInfo(EccoInclude::AddAddonInfo(szContactInfo));
+
+    string szLine = "==============================";
+    string szTime;
+    DateTime().Format(szTime, "%Y-%m-%d %H:%M");
+    Logger::WriteLine(szLine);
+    Logger::WriteLine(szBanner);
+    Logger::WriteLine("    Ver: " + szVersion);
+    Logger::WriteLine("    Time: " + szTime);
+    Logger::WriteLine(szLine);
     Logger::Say(EccoConfig::GetLocateMessage("PluginReloaded"));
 }
 
@@ -59,8 +84,6 @@ void MapInit(){
     if(aryMaps.length() > 0 && aryMaps[aryMaps.length() - 1] == g_Engine.mapname)
         IsMapAllowed = false;
 
-    g_Hooks.RegisterHook(Hooks::Player::ClientSay, @onChat);
-    g_Hooks.RegisterHook(Hooks::Player::ClientPutInServer, @onJoin);
     if(IsMapAllowed)
         EccoBuyMenu::ReadScriptList();
     
@@ -120,7 +143,7 @@ HookReturnCode onChat(SayParameters@ pParams){
     if(pPlayer !is null && (arg.StartsWith("!") || arg.StartsWith("/"))){
         if(arg.SubString(1).ToLowercase() != EccoConfig::GetConfig()["Ecco.BuyMenu", "OpenShopTrigger"].getString())
             return HOOK_CONTINUE;
-         pParams.ShouldHide = true;
+        pParams.ShouldHide = true;
         if(!IsMapAllowed){
             Logger::Chat(pPlayer, EccoConfig::GetLocateMessage("ChatLogTitle", @pPlayer) + " " + EccoConfig::GetLocateMessage("LocaleNotAllowed", @pPlayer));
             return HOOK_CONTINUE;
